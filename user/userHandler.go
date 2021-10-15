@@ -69,7 +69,41 @@ func AddUser(c *gin.Context){
 }
 
 func LoginUser(c *gin.Context){
-	token,err := auth.GenerateJWT("lsg_ser")
+	user_login := NewLogInUser()
+
+	if err := c.ShouldBindJSON(&user_login); err != nil{
+		c.JSON(500,gin.H{
+			"error":err.Error(),
+		})
+		return
+	}
+
+	//Check if the required strings are not empty
+	if strings.TrimSpace(user_login.User) == "" && strings.TrimSpace(user_login.Password) == "" {
+		c.JSON(400,gin.H{
+			"error":"Fill in all the require fields",
+		})
+		return
+	} 
+
+	//Validate the credentials
+	username,err := user_login.UserLogin()
+
+	if err != nil{
+		if err.Error() == "The user does not exist" || err.Error() == "Wrong password"{
+			c.JSON(400,gin.H{
+				"error":err.Error(),
+			})
+			return	
+		}
+
+		c.JSON(500,gin.H{
+			"error":err.Error(),
+		})
+	}
+
+	//Generate the token
+	token,err := auth.GenerateJWT(username)
 
 	if err != nil{
 		c.JSON(400,gin.H{
@@ -81,6 +115,8 @@ func LoginUser(c *gin.Context){
 	c.JSON(200,gin.H{
 		"token":token,
 	})
+
+
 }
 
 func CheckUser(c *gin.Context){
@@ -103,6 +139,6 @@ func CheckUser(c *gin.Context){
 	}
 
 	c.JSON(200,gin.H{
-		"isLogged":true,
+		"isAuthenticated":true,
 	})
 }

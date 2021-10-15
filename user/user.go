@@ -92,6 +92,44 @@ func (u *User) SaveUser() error{
 	return err
 }
 
-func (u *LogInUser) UserLogin() error{
-	return nil
+func (u *LogInUser) UserLogin() (string,error){
+	db,err := CO.GetDB()
+
+	if err != nil{
+		err = errors.New("DB connection error")
+		return "",err
+	}
+
+	defer db.Close()
+
+	stmt,err := db.Prepare("SELECT username,password FROM users WHERE username = ? OR email = ?")
+
+	if err != nil{
+		return "",err
+	}
+
+	defer stmt.Close()
+
+	var (
+		username string
+		password string
+	)
+
+	err = stmt.QueryRow(u.User,u.User).Scan(&username,&password)
+	
+	if err == sql.ErrNoRows{
+		err = errors.New("The user does not exist")
+		return "",err
+	}else if err != nil{
+		return "",err
+	}
+
+	err = CO.CheckPassword(password,u.Password)
+	
+	if err != nil{
+		err = errors.New("Wrong password")
+		return "",err
+	}
+
+	return username,err
 }
