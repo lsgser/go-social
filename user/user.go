@@ -18,10 +18,18 @@ type User struct{
 	UpdatedAt string `json:"updated_at,omitempty"`
 }
 
+type LogInUser struct{
+	User string `json:"user"`
+	Password string `json:"password"`
+}
+
 func NewUser() *User{
 	return new(User)
 }
 
+func NewLogInUser() *LogInUser{
+	return new(LogInUser)
+}
 /*
 	Saves a new user to the database
 */
@@ -82,4 +90,8 @@ func (u *User) SaveUser() error{
 	}
 
 	return err
+}
+
+func (u *LogInUser) UserLogin() error{
+	return nil
 }

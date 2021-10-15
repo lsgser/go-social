@@ -3,6 +3,7 @@ package user
 import(
 	"github.com/gin-gonic/gin"
 	"github.com/badoux/checkmail"
+	"github.com/lsgser/go-social/auth"
 	"strings"
 )
 
@@ -64,5 +65,44 @@ func AddUser(c *gin.Context){
 
 	c.JSON(200,gin.H{
 		"message":"User registered successfully",
+	})
+}
+
+func LoginUser(c *gin.Context){
+	token,err := auth.GenerateJWT("lsg_ser")
+
+	if err != nil{
+		c.JSON(400,gin.H{
+			"error":err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200,gin.H{
+		"token":token,
+	})
+}
+
+func CheckUser(c *gin.Context){
+	token := c.Param("token")
+
+	if strings.TrimSpace(token) == ""{
+		c.JSON(400,gin.H{
+			"error":"Token not provided",
+		})
+		return
+	}
+
+	err := auth.CheckJWT(token)
+
+	if err != nil{
+		c.JSON(400,gin.H{
+			"error":err.Error(),
+		})
+		return	
+	}
+
+	c.JSON(200,gin.H{
+		"isLogged":true,
 	})
 }
